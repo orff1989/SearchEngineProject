@@ -1,0 +1,4 @@
+D-RD-RD-RD-RD
+Num: 71
+Cost: 36
+0.0018226 seconds

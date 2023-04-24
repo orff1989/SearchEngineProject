@@ -1,0 +1,67 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.StringTokenizer;
+
+public class Ex1 {
+    public static void main(String[] args) {
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader("input.txt"));
+            String algorithm = reader.readLine();
+            String order = reader.readLine();
+            boolean time = reader.readLine().equalsIgnoreCase("with time");
+            boolean open = reader.readLine().equalsIgnoreCase("with open");
+            int size = Integer.parseInt(reader.readLine());
+
+            String line = reader.readLine();
+            StringTokenizer st = new StringTokenizer(line, "(),");
+            int startX = Integer.parseInt(st.nextToken());
+            int startY = Integer.parseInt(st.nextToken());
+            int goalX = Integer.parseInt(st.nextToken());
+            int goalY = Integer.parseInt(st.nextToken());
+
+            String[][] map = new String[size][size];
+            for (int i = 0; i < size; i++) {
+                line = reader.readLine();
+                for (int j = 0; j < size; j++) {
+                   map[i][j]=line.charAt(j)+"";
+                }
+            }
+
+            Board board = new Board(size, map);
+            Node start = new Node(startX, startY, 0, null, "");
+            Node goal = new Node(goalX, goalY, 0, null, "");
+
+            SearchAlgorithm searchAlgorithm;
+            String preference = null;
+            if (algorithm.equals("A*") || algorithm.equals("DFBnB")) {
+                preference = order.split(" ")[1];
+                order = order.split(" ")[0];
+            }
+
+            switch (algorithm) {
+                case "BFS":
+                    searchAlgorithm = new SearchAlgorithms.BFS(board,open);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid search algorithm");
+            }
+
+            SearchResult result = searchAlgorithm.search(board, start, goal, order, time, open);
+
+            FileWriter writer = new FileWriter("output.txt");
+            writer.write(result.getPath());
+            writer.write("\nNum: " + result.getNumNodes());
+            writer.write("\nCost: " + result.getCost());
+            if (time) {
+                writer.write("\n" + result.getTime() + " seconds");
+            }
+            writer.close();
+
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+}
+
