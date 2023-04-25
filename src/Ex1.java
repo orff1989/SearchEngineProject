@@ -51,6 +51,9 @@ public class Ex1 {
                 case "DFID":
                     searchAlgorithm = new SearchAlgorithms.DFID(board, open, order);
                     break;
+                case "A*":
+                    searchAlgorithm = new SearchAlgorithms.AStar(board, open, order, preference);
+                    break;
                 default:
                     throw new IllegalArgumentException("Invalid search algorithm");
             }

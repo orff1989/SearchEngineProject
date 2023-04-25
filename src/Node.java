@@ -1,4 +1,6 @@
 public class Node {
+    static long nodeCounterForTimestamp = 0;
+    long id;
     int x; // Row
     int y; // Column
     int cost;
@@ -12,6 +14,7 @@ public class Node {
         this.cost = cost;
         this.parent = parent;
         this.action = action;
+        this.id = nodeCounterForTimestamp++;
     }
 
     public int getX() {
@@ -81,4 +84,9 @@ public class Node {
                 ", y=" + y +
                 ", cost=" + cost +"}";
     }
+
+    public long getId() {
+        return id;
+    }
+
 }

@@ -1,5 +1,5 @@
-DFID
-clockwise
+A*
+clockwise old-first
 with time
 with open
 10

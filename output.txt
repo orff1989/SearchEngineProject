@@ -1,4 +1,4 @@
-D-RD-D-LD
-Num: 4
-Cost: 21
-0.018690901 seconds
+D-D-D-D
+Num: 5
+Cost: 8
+0.0153696 seconds

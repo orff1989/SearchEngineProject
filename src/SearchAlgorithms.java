@@ -63,7 +63,7 @@ public class SearchAlgorithms {
             long startTime = System.nanoTime();
             int nodes_counter = 0, depth = 1;
 
-            // Loop until a solution is found
+            // Loop until getting result
             while (true) {
                 Map<Node, Boolean> visited = new HashMap<>();
                 SearchResult result = limitedDFS(start, goal, depth, visited);
@@ -84,7 +84,7 @@ public class SearchAlgorithms {
                         return new SearchResult(result.getPath(), nodes_counter, result.getCost(), duration);
                     }
                 }
-                depth++;
+                depth++; // Increasing the depth of the search
             }
         }
 
@@ -133,6 +133,83 @@ public class SearchAlgorithms {
         }
     }
 
+    public static class AStar extends SearchAlgorithm {
+        private String preference;
+
+        public AStar(Board board, boolean open, String order, String preference) {
+            super(board, open, order);
+            this.preference = preference;
+        }
+
+        @Override
+        public SearchResult search(Node start, Node goal) {
+            long startTime = System.nanoTime();
+            int nodes_counter = 0;
+            PriorityQueue<Node> openList = new PriorityQueue<>(createNodeComparator(goal));
+            start.setAction("");
+            openList.add(start);
+            Set<Node> closedList = new HashSet<>();
+
+            while (!openList.isEmpty()) {
+                Node curr = openList.remove();
+                nodes_counter++;
+
+                if (curr.equals(goal)) {
+                    long endTime = System.nanoTime();
+                    double duration = (endTime - startTime) / 1e9;
+                    String path = curr.getPath();
+                    int cost = curr.getCost();
+                    return new SearchResult(path, nodes_counter, cost, duration);
+                }
+                closedList.add(curr);
+
+                List<Node> neighbors = board.getValidNeighbors(curr.getX(), curr.getY(), order);
+                for (Node neighbor : neighbors) {
+                    if (!closedList.contains(neighbor)) {
+                        neighbor.setParent(curr);
+                        neighbor.setCost(curr.getCost() + curr.costTo(neighbor, board));
+                        neighbor.setAction(getAction(curr, neighbor));
+
+                        if (!openList.contains(neighbor)) {
+                            openList.add(neighbor);
+                        } else {
+                            openList.remove(neighbor);
+                            openList.add(neighbor);
+                        }
+                    }
+                }
+                if (this.open) {
+                    System.out.println("Open list: " + openList);
+                }
+            }
+            long endTime = System.nanoTime();
+            double duration = (endTime - startTime) / 1e9;
+            return new SearchResult("no path", nodes_counter, Integer.MAX_VALUE, duration);
+        }
+
+        private Comparator<Node> createNodeComparator(Node goal) {
+            Comparator<Node> fScoreComparator = Comparator.comparingInt(node -> getFScore(node, goal));
+            Comparator<Node> timestampComparator = preference.equals("old-first") ?
+                    Comparator.comparingLong(Node::getId) :
+                    Comparator.comparingLong(Node::getId).reversed();
+            return fScoreComparator.thenComparing(timestampComparator);
+        }
+
+        private int getFScore(Node node, Node goal_node) {
+            int gScore = node.getCost();
+            int hScore = complexHeuristic(node, goal_node);
+            return gScore + hScore;
+        }
+
+        private int complexHeuristic(Node a, Node b) {
+            int dx = Math.abs(a.getX() - b.getX());
+            int dy = Math.abs(a.getY() - b.getY());
+            int diagonalSteps = Math.min(dx, dy);
+            int straightSteps = Math.max(dx, dy) - diagonalSteps;
+            int diagonalCost = 14; // Cost of diagonal movement (assuming cost of straight movement is 10)
+            return diagonalCost * diagonalSteps + 10 * straightSteps;
+        }
+    }
 
     // This method returns the direction from the curr node to its neighbor
     private static String getAction(Node current, Node neighbor) {
