@@ -7,6 +7,7 @@ import java.util.StringTokenizer;
 public class Ex1 {
     public static void main(String[] args) {
         try {
+            // Reading the file
             BufferedReader reader = new BufferedReader(new FileReader("input.txt"));
             String algorithm = reader.readLine();
             String order = reader.readLine();
@@ -14,6 +15,7 @@ public class Ex1 {
             boolean open = reader.readLine().equalsIgnoreCase("with open");
             int size = Integer.parseInt(reader.readLine());
 
+            // Setting the files values in variables
             String line = reader.readLine();
             StringTokenizer st = new StringTokenizer(line, "(),");
             int startX = Integer.parseInt(st.nextToken());
@@ -21,6 +23,7 @@ public class Ex1 {
             int goalX = Integer.parseInt(st.nextToken());
             int goalY = Integer.parseInt(st.nextToken());
 
+            // Creating the map
             String[][] map = new String[size][size];
             for (int i = 0; i < size; i++) {
                 line = reader.readLine();
@@ -40,6 +43,7 @@ public class Ex1 {
                 order = order.split(" ")[0];
             }
 
+            // Searching by the giving type of algorithm
             switch (algorithm) {
                 case "BFS":
                     searchAlgorithm = new SearchAlgorithms.BFS(board,open);
@@ -50,13 +54,19 @@ public class Ex1 {
 
             SearchResult result = searchAlgorithm.search(board, start, goal, order, time, open);
 
+            // Writing the search result to the output file
             FileWriter writer = new FileWriter("output.txt");
+
             writer.write(result.getPath());
             writer.write("\nNum: " + result.getNumNodes());
-            writer.write("\nCost: " + result.getCost());
+
+            if (result.getCost()==Integer.MAX_VALUE) writer.write("\nCost: inf");
+            else writer.write("\nCost: " + result.getCost());
+
             if (time) {
                 writer.write("\n" + result.getTime() + " seconds");
             }
+
             writer.close();
 
         } catch (IOException e){

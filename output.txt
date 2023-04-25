@@ -1,4 +1,4 @@
-D-RD-RD-RD-RD
-Num: 71
-Cost: 36
-0.0018226 seconds
+D-RD-D-LD
+Num: 31
+Cost: 21
+0.0011092 seconds

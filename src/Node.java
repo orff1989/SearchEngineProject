@@ -1,6 +1,6 @@
 public class Node {
-    int x;
-    int y;
+    int x; // Row
+    int y; // Column
     int cost;
     Node parent;
     String action;
@@ -74,4 +74,11 @@ public class Node {
         return baseCost;
     }
 
+    @Override
+    public String toString() {
+        return "Node{" +
+                "x=" + x +
+                ", y=" + y +
+                ", cost=" + cost +"}";
+    }
 }

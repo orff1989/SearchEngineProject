@@ -38,10 +38,10 @@ public class Board {
         return !map[x - 1][y - 1].equals("X");
     }
 
-    public List<Node> getNeighbors(int x, int y, String order) {
+    public List<Node> getValidNeighbors(int x, int y, String order) {
         List<Node> neighbors = new ArrayList<>();
-
         int[][] directions;
+
         if (order.equalsIgnoreCase("clockwise")) {
             directions = new int[][]{{0, 1}, {1, 1}, {1, 0}, {1, -1}, {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}};
         } else {
