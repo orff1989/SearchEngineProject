@@ -1,4 +1,4 @@
 D-RD-D-LD
-Num: 31
+Num: 4
 Cost: 21
-0.0011092 seconds
+0.018690901 seconds

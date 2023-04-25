@@ -46,13 +46,16 @@ public class Ex1 {
             // Searching by the giving type of algorithm
             switch (algorithm) {
                 case "BFS":
-                    searchAlgorithm = new SearchAlgorithms.BFS(board,open);
+                    searchAlgorithm = new SearchAlgorithms.BFS(board, open, order);
+                    break;
+                case "DFID":
+                    searchAlgorithm = new SearchAlgorithms.DFID(board, open, order);
                     break;
                 default:
                     throw new IllegalArgumentException("Invalid search algorithm");
             }
 
-            SearchResult result = searchAlgorithm.search(board, start, goal, order, time, open);
+            SearchResult result = searchAlgorithm.search(start, goal);
 
             // Writing the search result to the output file
             FileWriter writer = new FileWriter("output.txt");
