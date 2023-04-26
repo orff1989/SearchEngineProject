@@ -1,5 +1,5 @@
 public class Node {
-    static long nodeCounterForTimestamp = 0;
+    static long nodeCounter = 0;
     long id;
     int x; // Row
     int y; // Column
@@ -14,7 +14,7 @@ public class Node {
         this.cost = cost;
         this.parent = parent;
         this.action = action;
-        this.id = nodeCounterForTimestamp++;
+        this.id = nodeCounter++;
     }
 
     public int getX() {

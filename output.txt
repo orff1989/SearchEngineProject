@@ -1,4 +1,4 @@
 D-D-D-D
 Num: 5
 Cost: 8
-0.0153696 seconds
+0.0145639 seconds

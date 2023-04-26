@@ -134,6 +134,13 @@ public class SearchAlgorithms {
     }
 
     public static class AStar extends SearchAlgorithm {
+        /*
+        The Octile distance heuristic makes the A* algorithm optimal because it never overestimates the cost to reach the goal.
+        This property is called admissibility, and it ensures that the A* algorithm will find the shortest path when using an admissible heuristic.
+        The Octile distance heuristic is also consistent (or monotonic), which means that it satisfies the triangle inequality,
+        and the cost of any node along the path is always less than or equal to the estimated cost of moving to an adjacent node
+        plus the actual cost of moving to that adjacent node. Consistency ensures that A* is optimally efficient.
+        */
         private String preference;
 
         public AStar(Board board, boolean open, String order, String preference) {
@@ -145,6 +152,8 @@ public class SearchAlgorithms {
         public SearchResult search(Node start, Node goal) {
             long startTime = System.nanoTime();
             int nodes_counter = 0;
+
+            // Create a priority queue that sort the nodes based on their Total Cost (f function)
             PriorityQueue<Node> openList = new PriorityQueue<>(createNodeComparator(goal));
             start.setAction("");
             openList.add(start);
@@ -154,6 +163,7 @@ public class SearchAlgorithms {
                 Node curr = openList.remove();
                 nodes_counter++;
 
+                // check if we reached to our goal node
                 if (curr.equals(goal)) {
                     long endTime = System.nanoTime();
                     double duration = (endTime - startTime) / 1e9;
@@ -163,8 +173,10 @@ public class SearchAlgorithms {
                 }
                 closedList.add(curr);
 
+                // Get the valid neighbors of the current node
                 List<Node> neighbors = board.getValidNeighbors(curr.getX(), curr.getY(), order);
                 for (Node neighbor : neighbors) {
+                    // Check if we already explored this node
                     if (!closedList.contains(neighbor)) {
                         neighbor.setParent(curr);
                         neighbor.setCost(curr.getCost() + curr.costTo(neighbor, board));
@@ -172,7 +184,9 @@ public class SearchAlgorithms {
 
                         if (!openList.contains(neighbor)) {
                             openList.add(neighbor);
-                        } else {
+                        }
+                        else if (neighbor.getCost() > curr.getCost() + curr.costTo(neighbor, board)) {
+                            // Update the cost and position of the neighbor in the open list if we found a better path
                             openList.remove(neighbor);
                             openList.add(neighbor);
                         }
@@ -187,21 +201,24 @@ public class SearchAlgorithms {
             return new SearchResult("no path", nodes_counter, Integer.MAX_VALUE, duration);
         }
 
+        // A comparator for the nodes based on their f-cost and the preference of exploring older or newer nodes
         private Comparator<Node> createNodeComparator(Node goal) {
-            Comparator<Node> fScoreComparator = Comparator.comparingInt(node -> getFScore(node, goal));
+            Comparator<Node> fScoreComparator = Comparator.comparingInt(node -> getTotalCost(node, goal));
             Comparator<Node> timestampComparator = preference.equals("old-first") ?
                     Comparator.comparingLong(Node::getId) :
                     Comparator.comparingLong(Node::getId).reversed();
             return fScoreComparator.thenComparing(timestampComparator);
         }
 
-        private int getFScore(Node node, Node goal_node) {
-            int gScore = node.getCost();
-            int hScore = complexHeuristic(node, goal_node);
-            return gScore + hScore;
+        // The f function
+        private int getTotalCost(Node node, Node goal_node) {
+            int gCost = node.getCost();
+            int hCost = heuristicFunction(node, goal_node);
+            return gCost + hCost;
         }
 
-        private int complexHeuristic(Node a, Node b) {
+        // Calculates the heuristic cost of moving from one node to another
+        private int heuristicFunction(Node a, Node b) {
             int dx = Math.abs(a.getX() - b.getX());
             int dy = Math.abs(a.getY() - b.getY());
             int diagonalSteps = Math.min(dx, dy);
@@ -210,6 +227,7 @@ public class SearchAlgorithms {
             return diagonalCost * diagonalSteps + 10 * straightSteps;
         }
     }
+
 
     // This method returns the direction from the curr node to its neighbor
     private static String getAction(Node current, Node neighbor) {
