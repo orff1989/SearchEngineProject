@@ -1,4 +1,4 @@
-D-D-D-D
-Num: 5
-Cost: 8
-0.0145639 seconds
+no path
+Num: 0
+Cost: inf
+2.32E-4 seconds

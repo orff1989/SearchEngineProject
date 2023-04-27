@@ -11,9 +11,6 @@ public class SearchResult {
         this.time = time;
     }
 
-    public SearchResult(int nodesCreated, int nodesExpanded, int cost, double timeElapsed, Node current) {
-    }
-
     public String getPath() {
         return path;
     }

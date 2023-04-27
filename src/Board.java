@@ -42,12 +42,11 @@ public class Board {
         List<Node> neighbors = new ArrayList<>();
         int[][] directions;
 
-        if (order.equalsIgnoreCase("clockwise")) {
+        if (order.equals("clockwise")) {
             directions = new int[][]{{0, 1}, {1, 1}, {1, 0}, {1, -1}, {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}};
         } else {
             directions = new int[][]{{0, 1}, {-1, 1}, {-1, 0}, {-1, -1}, {0, -1}, {1, -1}, {1, 0}, {1, 1}};
         }
-
         for (int[] direction : directions) {
             int newX = x + direction[0];
             int newY = y + direction[1];
@@ -56,7 +55,6 @@ public class Board {
                 neighbors.add(new Node(newX, newY, getCellCost(newX, newY), null, ""));
             }
         }
-
         return neighbors;
     }
 

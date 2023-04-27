@@ -56,7 +56,11 @@ public class Node {
             path = "-" + currentNode.action + path;
             currentNode = currentNode.parent;
         }
-        return path.length() > 0 ? path.substring(1) : path;
+        if (path.length() > 0) {
+            return path.substring(1);
+        } else {
+            return path;
+        }
     }
 
     public void setAction(String s) {
