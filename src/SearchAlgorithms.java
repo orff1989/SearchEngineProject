@@ -211,6 +211,101 @@ public class SearchAlgorithms {
         }
     }
 
+    public static class IDAStar extends SearchAlgorithm {
+
+        public IDAStar(Board board, boolean open, String order) {
+            super(board, open, order);
+        }
+
+        @Override
+        public SearchResult search(Node start, Node goal) {
+            long startTime = System.nanoTime();
+            int nodesCounter = 0;
+            int threshold = heuristicFunction(start, goal);
+            Map<Node, String> nodeMarkers = new HashMap<>();
+
+            while (threshold != Integer.MAX_VALUE) {
+                Stack<Node> L = new Stack<>();
+                Set<Node> H = new HashSet<>();
+
+                int minF = Integer.MAX_VALUE;
+
+                L.push(start);
+                H.add(start);
+
+                while (!L.isEmpty()) {
+                    Node n = L.pop();
+                    if (nodeMarkers.containsKey(n) && nodeMarkers.get(n).equals("out")) {
+                        H.remove(n);
+                        nodeMarkers.remove(n);
+                    } else {
+                        nodeMarkers.put(n, "out");
+                        L.push(n);
+
+                        List<Node> neighbors = board.getValidNeighbors(n.getX(), n.getY(), order);
+                        for (Node neighbor : neighbors) {
+                            neighbor.setParent(n);
+                            neighbor.setCost(n.getCost() + n.costTo(neighbor, board));
+                            neighbor.setAction(getAction(n, neighbor));
+
+                            int f = getTotalCost(neighbor, goal);
+
+                            if (f > threshold) {
+                                minF = Math.min(minF, f);
+                                continue;
+                            }
+
+                            if (H.contains(neighbor) && nodeMarkers.containsKey(neighbor) && nodeMarkers.get(neighbor).equals("out")) {
+                                continue;
+                            }
+
+                            if (H.contains(neighbor) && !nodeMarkers.get(neighbor).equals("out")) {
+                                Node existingNeighbor = getNodeFrom(neighbor,H);
+                                
+                                if (existingNeighbor != null) {
+                                    if (getTotalCost(existingNeighbor, goal) > f) {
+                                        L.remove(existingNeighbor);
+                                        H.remove(existingNeighbor);
+                                    } else {
+                                        continue;
+                                    }
+                                }
+                            }
+                            if (goal.equals(neighbor)) {
+                                String path = neighbor.getPath();
+                                int cost = neighbor.getCost();
+                                long endTime = System.nanoTime();
+                                double duration = (endTime - startTime) / 1e9;
+                                return new SearchResult(path, nodesCounter, cost, duration);
+                            }
+
+                            L.push(neighbor);
+                            H.add(neighbor);
+                        }
+                        L.sort((n1, n2) -> Integer.compare(getTotalCost(n2, goal), getTotalCost(n1, goal)));
+                    }
+                }
+                threshold = minF;
+            }
+
+            long endTime = System.nanoTime();
+            double duration = (endTime - startTime) / 1e9;
+            return new SearchResult("no path", nodesCounter, Integer.MAX_VALUE, duration);
+        }
+
+        private Node getNodeFrom(Node neighbor, Set<Node> h) {
+            Node existingNeighbor = null;
+            for (Node node : h) {
+                if (node.equals(neighbor)) {
+                    existingNeighbor = node;
+                    break;
+                }
+            }
+            return existingNeighbor;
+        }
+    }
+
+
     // The f function
     private static int getTotalCost(Node node, Node goal_node) {
         int gCost = node.getCost();
