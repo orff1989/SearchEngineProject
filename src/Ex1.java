@@ -54,9 +54,6 @@ public class Ex1 {
                 case "A*":
                     searchAlgorithm = new SearchAlgorithms.AStar(board, open, order, preference);
                     break;
-                case "IDA*":
-                    searchAlgorithm = new SearchAlgorithms.IDAStar(board, open, order);
-                    break;
                 default:
                     throw new IllegalArgumentException("Invalid search algorithm");
             }

@@ -209,25 +209,24 @@ public class SearchAlgorithms {
                     Comparator.comparingLong(Node::getId).reversed();
             return fScoreComparator.thenComparing(timestampComparator);
         }
-
-        // The f function
-        private int getTotalCost(Node node, Node goal_node) {
-            int gCost = node.getCost();
-            int hCost = heuristicFunction(node, goal_node);
-            return gCost + hCost;
-        }
-
-        // Calculates the heuristic cost of moving from one node to another
-        private int heuristicFunction(Node a, Node b) {
-            int dx = Math.abs(a.getX() - b.getX());
-            int dy = Math.abs(a.getY() - b.getY());
-            int diagonalSteps = Math.min(dx, dy);
-            int straightSteps = Math.max(dx, dy) - diagonalSteps;
-            int diagonalCost = 14; // Cost of diagonal movement (assuming cost of straight movement is 10)
-            return diagonalCost * diagonalSteps + 10 * straightSteps;
-        }
     }
 
+    // The f function
+    private static int getTotalCost(Node node, Node goal_node) {
+        int gCost = node.getCost();
+        int hCost = heuristicFunction(node, goal_node);
+        return gCost + hCost;
+    }
+
+    // Calculates the heuristic cost of moving from one node to another
+    private static int heuristicFunction(Node a, Node b) {
+        int dx = Math.abs(a.getX() - b.getX());
+        int dy = Math.abs(a.getY() - b.getY());
+        int diagonalSteps = Math.min(dx, dy);
+        int straightSteps = Math.max(dx, dy) - diagonalSteps;
+        int diagonalCost = 14; // Cost of diagonal movement (assuming cost of straight movement is 10)
+        return diagonalCost * diagonalSteps + 10 * straightSteps;
+    }
 
     // This method returns the direction from the curr node to its neighbor
     private static String getAction(Node current, Node neighbor) {
