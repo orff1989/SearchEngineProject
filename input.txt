@@ -1,7 +1,7 @@
 IDA*
 counter-clockwise new-first
 with time
-no open
+with open
 10
 (2,2),(6,2)
 XXXXXXXXXX

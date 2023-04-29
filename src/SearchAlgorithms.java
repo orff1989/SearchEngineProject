@@ -290,6 +290,9 @@ public class SearchAlgorithms {
                             H.add(neighbor);
                         }
                     }
+                    if(open){
+                        System.out.println("Open list: " + L);
+                    }
                 }
                 threshold = minF;
             }
