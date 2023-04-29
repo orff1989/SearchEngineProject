@@ -1,11 +1,11 @@
 import java.util.*;
 
 public class SearchAlgorithms {
+
     public static class BFS extends SearchAlgorithm {
 
         public BFS(Board board, boolean open, String order) {
             super(board, open, order);
-
         }
 
         @Override
@@ -203,7 +203,7 @@ public class SearchAlgorithms {
 
         // A comparator for the nodes based on their f-cost and the preference of exploring older or newer nodes
         private Comparator<Node> createNodeComparator(Node goal) {
-            Comparator<Node> fScoreComparator = Comparator.comparingInt(node -> getTotalCost(node, goal));
+            Comparator<Node> fScoreComparator = Comparator.comparingInt(node -> getTotalCost(node, goal, board));
             Comparator<Node> timestampComparator = preference.equals("old-first") ?
                     Comparator.comparingLong(Node::getId) :
                     Comparator.comparingLong(Node::getId).reversed();
@@ -221,7 +221,7 @@ public class SearchAlgorithms {
         public SearchResult search(Node start, Node goal) {
             long startTime = System.nanoTime();
             int nodesCounter = 0;
-            int threshold = heuristicFunction(start, goal);
+            int threshold = heuristicFunction(start, goal, board);
             Map<Node, String> nodeMarkers = new HashMap<>();
 
             while (threshold != Integer.MAX_VALUE) {
@@ -248,7 +248,7 @@ public class SearchAlgorithms {
                             neighbor.setCost(n.getCost() + n.costTo(neighbor, board));
                             neighbor.setAction(getAction(n, neighbor));
 
-                            int f = getTotalCost(neighbor, goal);
+                            int f = getTotalCost(neighbor, goal, board);
 
                             if (f > threshold) {
                                 minF = Math.min(minF, f);
@@ -263,7 +263,7 @@ public class SearchAlgorithms {
                                 Node existingNeighbor = getNodeFrom(neighbor,H);
 
                                 if (existingNeighbor != null) {
-                                    if (getTotalCost(existingNeighbor, goal) > f) {
+                                    if (getTotalCost(existingNeighbor, goal, board) > f) {
                                         L.remove(existingNeighbor);
                                         H.remove(existingNeighbor);
                                     } else {
@@ -282,7 +282,6 @@ public class SearchAlgorithms {
                             L.push(neighbor);
                             H.add(neighbor);
                         }
-                        L.sort((n1, n2) -> Integer.compare(getTotalCost(n2, goal), getTotalCost(n1, goal)));
                     }
                 }
                 threshold = minF;
@@ -303,21 +302,50 @@ public class SearchAlgorithms {
 
 
     // The f function
-    private static int getTotalCost(Node node, Node goal_node) {
+    private static int getTotalCost(Node node, Node goal_node, Board board) {
         int gCost = node.getCost();
-        int hCost = heuristicFunction(node, goal_node);
+        int hCost = heuristicFunction(node, goal_node, board);
         return gCost + hCost;
     }
 
     // Calculates the heuristic cost of moving from one node to another
-    private static int heuristicFunction(Node a, Node b) {
-        int dx = Math.abs(a.getX() - b.getX());
-        int dy = Math.abs(a.getY() - b.getY());
-        int diagonalSteps = Math.min(dx, dy);
-        int straightSteps = Math.max(dx, dy) - diagonalSteps;
-        int diagonalCost = 14; // Cost of diagonal movement (assuming cost of straight movement is 10)
-        return diagonalCost * diagonalSteps + 10 * straightSteps;
+    private static int heuristicFunction(Node current, Node goal, Board board) {
+        int dx = Math.abs(current.getX() - goal.getX());
+        int dy = Math.abs(current.getY() - goal.getY());
+
+        List<Node> neighbors = board.getValidNeighbors(current.getX(), current.getY(), "clockwise");
+
+        double nonDiagonalCost = 0;
+        double diagonalCost = 0;
+        int nonDiagonalCount = 0;
+        int diagonalCount = 0;
+
+        for (Node neighbor : neighbors) {
+            int xDelta = Math.abs(neighbor.getX() - current.getX());
+            int yDelta = Math.abs(neighbor.getY() - current.getY());
+            boolean isDiagonal = xDelta == 1 && yDelta == 1;
+
+            if (isDiagonal) {
+                if (board.getCellType(neighbor.getX(), neighbor.getY()).equals("H")) {
+                    diagonalCost += 10;
+                } else {
+                    diagonalCost += board.getCellCost(neighbor.getX(), neighbor.getY());
+                }
+                diagonalCount++;
+            } else if (xDelta == 1 || yDelta == 1) {
+                nonDiagonalCost += board.getCellCost(neighbor.getX(), neighbor.getY());
+                nonDiagonalCount++;
+            }
+        }
+
+        double D = nonDiagonalCount > 0 ? nonDiagonalCost / nonDiagonalCount : 1;
+        double D2 = diagonalCount > 0 ? diagonalCost / diagonalCount : 1;
+        double weight = 1.2; // gives more focus to the goal node
+
+        return (int) (D * (weight*dx + weight*dy) + (D2 - 2 * D) * Math.min(dx, dy));
     }
+
+
 
     // This method returns the direction from the curr node to its neighbor
     private static String getAction(Node current, Node neighbor) {

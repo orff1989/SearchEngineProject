@@ -61,4 +61,8 @@ public class Board {
     public String[][] getMap() {
         return map;
     }
+
+    public String getCellType(int x, int y) {
+        return map[x][y];
+    }
 }

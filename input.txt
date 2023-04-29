@@ -1,5 +1,5 @@
-IDA*
-counter-clockwise
+A*
+counter-clockwise new-first
 with time
 no open
 10
