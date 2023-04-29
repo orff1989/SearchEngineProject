@@ -261,7 +261,7 @@ public class SearchAlgorithms {
 
                             if (H.contains(neighbor) && !nodeMarkers.get(neighbor).equals("out")) {
                                 Node existingNeighbor = getNodeFrom(neighbor,H);
-                                
+
                                 if (existingNeighbor != null) {
                                     if (getTotalCost(existingNeighbor, goal) > f) {
                                         L.remove(existingNeighbor);
@@ -294,14 +294,10 @@ public class SearchAlgorithms {
         }
 
         private Node getNodeFrom(Node neighbor, Set<Node> h) {
-            Node existingNeighbor = null;
             for (Node node : h) {
-                if (node.equals(neighbor)) {
-                    existingNeighbor = node;
-                    break;
-                }
+                if (node.equals(neighbor)) return node;
             }
-            return existingNeighbor;
+            return null;
         }
     }
 
