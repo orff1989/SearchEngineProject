@@ -225,6 +225,7 @@ public class SearchAlgorithms {
             Map<Node, String> nodeMarkers = new HashMap<>();
 
             while (threshold != Integer.MAX_VALUE) {
+                // Create every iterate of the while loop the L and H structures
                 Stack<Node> L = new Stack<>();
                 Set<Node> H = new HashSet<>();
 
@@ -233,7 +234,9 @@ public class SearchAlgorithms {
                 L.push(start);
                 H.add(start);
 
+                // Running until L is empty
                 while (!L.isEmpty()) {
+                    nodesCounter++;
                     Node n = L.pop();
                     if (nodeMarkers.containsKey(n) && nodeMarkers.get(n).equals("out")) {
                         H.remove(n);
@@ -242,12 +245,14 @@ public class SearchAlgorithms {
                         nodeMarkers.put(n, "out");
                         L.push(n);
 
+                        // Getting the valid neighbors node from n
                         List<Node> neighbors = board.getValidNeighbors(n.getX(), n.getY(), order);
                         for (Node neighbor : neighbors) {
                             neighbor.setParent(n);
                             neighbor.setCost(n.getCost() + n.costTo(neighbor, board));
                             neighbor.setAction(getAction(n, neighbor));
 
+                            // Getting the value of the f function
                             int f = getTotalCost(neighbor, goal, board);
 
                             if (f > threshold) {
@@ -263,6 +268,7 @@ public class SearchAlgorithms {
                                 Node existingNeighbor = getNodeFrom(neighbor,H);
 
                                 if (existingNeighbor != null) {
+                                    // Checking which f-cost is bigger
                                     if (getTotalCost(existingNeighbor, goal, board) > f) {
                                         L.remove(existingNeighbor);
                                         H.remove(existingNeighbor);
@@ -271,6 +277,7 @@ public class SearchAlgorithms {
                                     }
                                 }
                             }
+                            // Check if we reached to the goal node
                             if (goal.equals(neighbor)) {
                                 String path = neighbor.getPath();
                                 int cost = neighbor.getCost();
@@ -292,14 +299,7 @@ public class SearchAlgorithms {
             return new SearchResult("no path", nodesCounter, Integer.MAX_VALUE, duration);
         }
 
-        private Node getNodeFrom(Node neighbor, Set<Node> h) {
-            for (Node node : h) {
-                if (node.equals(neighbor)) return node;
-            }
-            return null;
-        }
     }
-
 
     // The f function
     private static int getTotalCost(Node node, Node goal_node, Board board) {
@@ -320,6 +320,7 @@ public class SearchAlgorithms {
         int nonDiagonalCount = 0;
         int diagonalCount = 0;
 
+        // Loop through the neighbors to calculate the diagonal and non-diagonal costs
         for (Node neighbor : neighbors) {
             int xDelta = Math.abs(neighbor.getX() - current.getX());
             int yDelta = Math.abs(neighbor.getY() - current.getY());
@@ -338,6 +339,7 @@ public class SearchAlgorithms {
             }
         }
 
+        // Calculate the average cost of the diagonal and non-diagonal valid nodes
         double D = nonDiagonalCount > 0 ? nonDiagonalCost / nonDiagonalCount : 1;
         double D2 = diagonalCount > 0 ? diagonalCost / diagonalCount : 1;
         double weight = 1.2; // gives more focus to the goal node
@@ -345,7 +347,13 @@ public class SearchAlgorithms {
         return (int) (D * (weight*dx + weight*dy) + (D2 - 2 * D) * Math.min(dx, dy));
     }
 
-
+    // This method returns the node in the set h that equal to given node n
+    private static Node getNodeFrom(Node n, Set<Node> h) {
+        for (Node node : h) {
+            if (node.equals(n)) return node;
+        }
+        return null;
+    }
 
     // This method returns the direction from the curr node to its neighbor
     private static String getAction(Node current, Node neighbor) {

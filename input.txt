@@ -1,4 +1,4 @@
-A*
+IDA*
 counter-clockwise new-first
 with time
 no open

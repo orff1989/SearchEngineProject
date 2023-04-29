@@ -21,7 +21,7 @@ public class Board {
             case "H":
                 return 5;
             case "X":
-                return 0;
+                return Integer.MAX_VALUE;
             case "S":
                 return 0;
             case "G":
