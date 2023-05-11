@@ -58,7 +58,7 @@ public class Ex1 {
                     searchAlgorithm = new SearchAlgorithms.IDAStar(board, open, order);
                     break;
                 case "DFBnB":
-                    searchAlgorithm = new SearchAlgorithms.AStar(board, open, order, preference);
+                    searchAlgorithm = new SearchAlgorithms.DFBnB(board, open, order, preference);
                     break;
                 default:
                     throw new IllegalArgumentException("Invalid search algorithm");

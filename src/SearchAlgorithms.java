@@ -1,4 +1,5 @@
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class SearchAlgorithms {
 
@@ -134,13 +135,6 @@ public class SearchAlgorithms {
     }
 
     public static class AStar extends SearchAlgorithm {
-        /*
-        The Octile distance heuristic makes the A* algorithm optimal because it never overestimates the cost to reach the goal.
-        This property is called admissibility, and it ensures that the A* algorithm will find the shortest path when using an admissible heuristic.
-        The Octile distance heuristic is also consistent (or monotonic), which means that it satisfies the triangle inequality,
-        and the cost of any node along the path is always less than or equal to the estimated cost of moving to an adjacent node
-        plus the actual cost of moving to that adjacent node. Consistency ensures that A* is optimally efficient.
-        */
         private String preference;
 
         public AStar(Board board, boolean open, String order, String preference) {
@@ -221,7 +215,7 @@ public class SearchAlgorithms {
         public SearchResult search(Node start, Node goal) {
             long startTime = System.nanoTime();
             int nodesCounter = 0;
-            int threshold = heuristicFunction(start, goal, board);
+            int threshold = heuristicFunction(start, goal);
             Map<Node, String> nodeMarkers = new HashMap<>();
 
             while (threshold != Integer.MAX_VALUE) {
@@ -304,50 +298,117 @@ public class SearchAlgorithms {
 
     }
 
+    public static class DFBnB extends SearchAlgorithm {
+        private String preference;
+
+        public DFBnB(Board board, boolean open, String order, String preference) {
+            super(board, open, order);
+            this.preference = preference;
+        }
+
+        @Override
+        public SearchResult search(Node start, Node goal) {
+            long startTime = System.nanoTime();
+
+            Stack<Node> L = new Stack<>();
+            Set<Node> H = new HashSet<>();
+            Map<Node, String> nodeMarkers = new HashMap<>();
+
+            L.push(start);
+            H.add(start);
+
+            int t = Integer.MAX_VALUE;
+            int nodesCounter = 0;
+
+            // Iterating while the L is not empty
+            while (!L.isEmpty()) {
+                Node n = L.pop();
+                nodesCounter++;
+
+                if (nodeMarkers.get(n) != null && nodeMarkers.get(n).equals("out")) {
+                    H.remove(n);
+                } else {
+                    nodeMarkers.put(n, "out");
+                    L.push(n);
+
+                    // Getting the neighbors of n node
+                    List<Node> N = board.getValidNeighbors(n.getX(), n.getY(), order);
+
+                    // Sorting the neighbors Node list by the f function
+                    Comparator<Node> comparator = Comparator.comparingInt(node -> getTotalCost(node, goal, board));
+                    if ("new-first".equals(preference)) {
+                        comparator = comparator.thenComparing((node1, node2) -> Math.toIntExact(node2.getId() - node1.getId()));
+                    } else {
+                        comparator = comparator.thenComparing((node1, node2) -> Math.toIntExact(node1.getId() - node2.getId()));
+                    }
+                    N.sort(comparator);
+
+                    // Iterating over the neighbors nodes
+                    for (Iterator<Node> it = N.iterator(); it.hasNext(); ) {
+                        Node g = it.next();
+                        g.setParent(n);
+                        g.setCost(n.getCost() + n.costTo(g, board));
+                        g.setAction(getAction(n, g));
+
+                        int f_g = getTotalCost(g, goal, board);
+
+                        // Checking the total cost
+                        if (f_g >= t) {
+                            it.remove();
+                            while (it.hasNext()) {
+                                it.next();
+                                it.remove();
+                            }
+                        } else if (H.contains(g) && nodeMarkers.get(g) != null && nodeMarkers.get(g).equals("out")) {
+                            it.remove();
+                        } else if (H.contains(g) && (nodeMarkers.get(g) == null || !nodeMarkers.get(g).equals("out"))) {
+                            Node gPrime = getNodeFrom(g, H);
+                            if (gPrime != null && getTotalCost(gPrime, goal, board) <= f_g) {
+                                it.remove();
+                            } else {
+                                L.remove(g);
+                                H.remove(g);
+                            }
+                            // Checking if we reach to the goal node
+                        } else if (g.equals(goal)) {
+                            String path = g.getPath();
+                            int cost = g.getCost();
+                            long endTime = System.nanoTime();
+                            double duration = (endTime - startTime) / 1e9;
+                            return new SearchResult(path, nodesCounter, cost, duration);
+                        }
+                    }
+                    // Inserting the N nodes members in reverse order to H and L
+                    Collections.reverse(N);
+                    L.addAll(N);
+                    H.addAll(N);
+                }
+                if(open){
+                    System.out.println("Open list: " + L);
+                }
+            }
+
+            long endTime = System.nanoTime();
+            double duration = (endTime - startTime) / 1e9;
+            return new SearchResult("no path", nodesCounter, Integer.MAX_VALUE, duration);
+        }
+    }
+
+
     // The f function
     private static int getTotalCost(Node node, Node goal_node, Board board) {
         int gCost = node.getCost();
-        int hCost = heuristicFunction(node, goal_node, board);
+        int hCost = heuristicFunction(node, goal_node);
         return gCost + hCost;
     }
 
-    // Calculates the heuristic cost of moving from one node to another
-    private static int heuristicFunction(Node current, Node goal, Board board) {
+    // The heuristic function - h function
+    private static int heuristicFunction(Node current, Node goal) {
         int dx = Math.abs(current.getX() - goal.getX());
         int dy = Math.abs(current.getY() - goal.getY());
-
-        List<Node> neighbors = board.getValidNeighbors(current.getX(), current.getY(), "clockwise");
-
-        double nonDiagonalCost = 0;
-        double diagonalCost = 0;
-        int nonDiagonalCount = 0;
-        int diagonalCount = 0;
-
-        // Loop through the neighbors to calculate the diagonal and non-diagonal costs
-        for (Node neighbor : neighbors) {
-            int xDelta = Math.abs(neighbor.getX() - current.getX());
-            int yDelta = Math.abs(neighbor.getY() - current.getY());
-            boolean isDiagonal = xDelta == 1 && yDelta == 1;
-
-            if (isDiagonal) {
-                if (board.getCellType(neighbor.getX(), neighbor.getY()).equals("H")) {
-                    diagonalCost += 10;
-                } else {
-                    diagonalCost += board.getCellCost(neighbor.getX(), neighbor.getY());
-                }
-                diagonalCount++;
-            } else if (xDelta == 1 || yDelta == 1) {
-                nonDiagonalCost += board.getCellCost(neighbor.getX(), neighbor.getY());
-                nonDiagonalCount++;
-            }
-        }
-
-        // Calculate the average cost of the diagonal and non-diagonal valid nodes
-        double D = nonDiagonalCount > 0 ? nonDiagonalCost / nonDiagonalCount : 1;
-        double D2 = diagonalCount > 0 ? diagonalCost / diagonalCount : 1;
-        double weight = 1.2; // gives more focus to the goal node
-
-        return (int) (D * (weight*dx + weight*dy) + (D2 - 2 * D) * Math.min(dx, dy));
+        int minimumCost1 = 1; // Minimum cost of moving horizontally/vertically
+        int minimumCost2 = 1; // Minimum cost of moving diagonally
+        return minimumCost1 * (dx + dy) + (minimumCost2 - 2 * minimumCost1) * Math.min(dx, dy);
     }
 
     // This method returns the node in the set h that equal to given node n
