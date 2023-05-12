@@ -93,4 +93,12 @@ public class Node {
         return id;
     }
 
+    public int getNodeCounter() {
+        int offset = 10;
+        int result = (int) (nodeCounter-offset);
+
+        if (result<0) result= (int) nodeCounter;
+
+        return result;
+    }
 }

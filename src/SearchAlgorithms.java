@@ -1,8 +1,7 @@
 import java.util.*;
-import java.util.stream.Collectors;
+
 
 public class SearchAlgorithms {
-
     public static class BFS extends SearchAlgorithm {
 
         public BFS(Board board, boolean open, String order) {
@@ -12,7 +11,6 @@ public class SearchAlgorithms {
         @Override
         public SearchResult search(Node start, Node goal) {
             long startTime = System.nanoTime();
-            int nodes_counter = 0;
             Queue<Node> openList = new LinkedList<>(); // The nodes that need to be explored
             start.setAction("");
             openList.add(start);
@@ -20,22 +18,21 @@ public class SearchAlgorithms {
 
             while (!openList.isEmpty()) { // While there is nodes to be explored
                 Node curr = openList.remove();
-                nodes_counter++;
 
                 if (curr.equals(goal)) { // Checking if we found the goal node
                     long endTime = System.nanoTime();
                     double duration = (endTime - startTime) / 1e9;
                     String path = curr.getPath();
                     int cost = curr.getCost();
-                    return new SearchResult(path, nodes_counter, cost, duration);
+                    return new SearchResult(path, curr.getNodeCounter(), cost, duration);
                 }
                 closedList.add(curr); // Adding the node to the explored nodes list
 
                 // Getting the valid neighbors of the node
-                List<Node> neighbors = board.getValidNeighbors(curr.getX(), curr.getY(), order);
+                List<Node> neighbors = board.getValidNeighbors(curr, order, openList);
+
                 for (Node neighbor : neighbors) {
                     if (!closedList.contains(neighbor) && !openList.contains(neighbor)) { // Check if we saw this node already
-                        neighbor.setParent(curr);
                         neighbor.setCost(curr.getCost() + curr.costTo(neighbor,board));
                         neighbor.setAction(getAction(curr, neighbor)); // Set the action for the neighbor node
                         openList.add(neighbor);
@@ -47,7 +44,7 @@ public class SearchAlgorithms {
             }
             long endTime = System.nanoTime();
             double duration = (endTime - startTime) / 1e9;
-            return new SearchResult("no path", nodes_counter, Integer.MAX_VALUE, duration); // the algorithm did not find any path
+            return new SearchResult("no path", start.getNodeCounter(), Integer.MAX_VALUE, duration); // the algorithm did not find any path
         }
     }
 
@@ -58,11 +55,10 @@ public class SearchAlgorithms {
         public DFID(Board board, boolean open, String order) {
             super(board, open, order);
         }
-
         @Override
         public SearchResult search(Node start, Node goal) {
             long startTime = System.nanoTime();
-            int nodes_counter = 0, depth = 1;
+            int depth = 1;
 
             // Loop until getting result
             while (true) {
@@ -72,7 +68,6 @@ public class SearchAlgorithms {
                 if (this.open) {
                     System.out.println("Depth: " + depth + ", Open list: " + visited.keySet());
                 }
-                nodes_counter += visited.size();
 
                 // Check if the search result is not a cutoff, and return the result accordingly
                 if (!result.getPath().equals(CUTOFF)) {
@@ -80,9 +75,9 @@ public class SearchAlgorithms {
                     double duration = (endTime - startTime) / 1e9;
 
                     if (result.getPath().equals(FAIL)) {
-                        return new SearchResult("no path", nodes_counter, Integer.MAX_VALUE, duration);
+                        return new SearchResult("no path", start.getNodeCounter(), Integer.MAX_VALUE, duration);
                     } else {
-                        return new SearchResult(result.getPath(), nodes_counter, result.getCost(), duration);
+                        return new SearchResult(result.getPath(), start.getNodeCounter(), result.getCost(), duration);
                     }
                 }
                 depth++; // Increasing the depth of the search
@@ -101,7 +96,7 @@ public class SearchAlgorithms {
             } else {
                 visited.put(node, true);
                 boolean isCutoff = false;
-                List<Node> neighbors = board.getValidNeighbors(node.getX(), node.getY(), order);
+                List<Node> neighbors = board.getValidNeighbors(node, order, null);
 
                 // Iterate through the neighbors of the current node
                 for (Node neighbor : neighbors) {
@@ -145,7 +140,6 @@ public class SearchAlgorithms {
         @Override
         public SearchResult search(Node start, Node goal) {
             long startTime = System.nanoTime();
-            int nodes_counter = 0;
 
             // Create a priority queue that sort the nodes based on their Total Cost (f function)
             PriorityQueue<Node> openList = new PriorityQueue<>(createNodeComparator(goal));
@@ -155,7 +149,6 @@ public class SearchAlgorithms {
 
             while (!openList.isEmpty()) {
                 Node curr = openList.remove();
-                nodes_counter++;
 
                 // check if we reached to our goal node
                 if (curr.equals(goal)) {
@@ -163,12 +156,12 @@ public class SearchAlgorithms {
                     double duration = (endTime - startTime) / 1e9;
                     String path = curr.getPath();
                     int cost = curr.getCost();
-                    return new SearchResult(path, nodes_counter, cost, duration);
+                    return new SearchResult(path, start.getNodeCounter(), cost, duration);
                 }
                 closedList.add(curr);
 
                 // Get the valid neighbors of the current node
-                List<Node> neighbors = board.getValidNeighbors(curr.getX(), curr.getY(), order);
+                List<Node> neighbors = board.getValidNeighbors(curr, order, null);
                 for (Node neighbor : neighbors) {
                     // Check if we already explored this node
                     if (!closedList.contains(neighbor)) {
@@ -192,7 +185,7 @@ public class SearchAlgorithms {
             }
             long endTime = System.nanoTime();
             double duration = (endTime - startTime) / 1e9;
-            return new SearchResult("no path", nodes_counter, Integer.MAX_VALUE, duration);
+            return new SearchResult("no path", start.getNodeCounter(), Integer.MAX_VALUE, duration);
         }
 
         // A comparator for the nodes based on their f-cost and the preference of exploring older or newer nodes
@@ -214,7 +207,6 @@ public class SearchAlgorithms {
         @Override
         public SearchResult search(Node start, Node goal) {
             long startTime = System.nanoTime();
-            int nodesCounter = 0;
             int threshold = heuristicFunction(start, goal);
             Map<Node, String> nodeMarkers = new HashMap<>();
 
@@ -230,7 +222,6 @@ public class SearchAlgorithms {
 
                 // Running until L is empty
                 while (!L.isEmpty()) {
-                    nodesCounter++;
                     Node n = L.pop();
                     if (nodeMarkers.containsKey(n) && nodeMarkers.get(n).equals("out")) {
                         H.remove(n);
@@ -240,7 +231,7 @@ public class SearchAlgorithms {
                         L.push(n);
 
                         // Getting the valid neighbors node from n
-                        List<Node> neighbors = board.getValidNeighbors(n.getX(), n.getY(), order);
+                        List<Node> neighbors = board.getValidNeighbors(n, order, null);
                         for (Node neighbor : neighbors) {
                             neighbor.setParent(n);
                             neighbor.setCost(n.getCost() + n.costTo(neighbor, board));
@@ -277,7 +268,7 @@ public class SearchAlgorithms {
                                 int cost = neighbor.getCost();
                                 long endTime = System.nanoTime();
                                 double duration = (endTime - startTime) / 1e9;
-                                return new SearchResult(path, nodesCounter, cost, duration);
+                                return new SearchResult(path, start.getNodeCounter(), cost, duration);
                             }
 
                             L.push(neighbor);
@@ -293,7 +284,7 @@ public class SearchAlgorithms {
 
             long endTime = System.nanoTime();
             double duration = (endTime - startTime) / 1e9;
-            return new SearchResult("no path", nodesCounter, Integer.MAX_VALUE, duration);
+            return new SearchResult("no path", start.getNodeCounter(), Integer.MAX_VALUE, duration);
         }
 
     }
@@ -318,12 +309,10 @@ public class SearchAlgorithms {
             H.add(start);
 
             int t = Integer.MAX_VALUE;
-            int nodesCounter = 0;
 
             // Iterating while the L is not empty
             while (!L.isEmpty()) {
                 Node n = L.pop();
-                nodesCounter++;
 
                 if (nodeMarkers.get(n) != null && nodeMarkers.get(n).equals("out")) {
                     H.remove(n);
@@ -332,7 +321,7 @@ public class SearchAlgorithms {
                     L.push(n);
 
                     // Getting the neighbors of n node
-                    List<Node> N = board.getValidNeighbors(n.getX(), n.getY(), order);
+                    List<Node> N = board.getValidNeighbors(n, order, null);
 
                     // Sorting the neighbors Node list by the f function
                     Comparator<Node> comparator = Comparator.comparingInt(node -> getTotalCost(node, goal, board));
@@ -375,7 +364,7 @@ public class SearchAlgorithms {
                             int cost = g.getCost();
                             long endTime = System.nanoTime();
                             double duration = (endTime - startTime) / 1e9;
-                            return new SearchResult(path, nodesCounter, cost, duration);
+                            return new SearchResult(path, start.getNodeCounter(), cost, duration);
                         }
                     }
                     // Inserting the N nodes members in reverse order to H and L
@@ -390,7 +379,7 @@ public class SearchAlgorithms {
 
             long endTime = System.nanoTime();
             double duration = (endTime - startTime) / 1e9;
-            return new SearchResult("no path", nodesCounter, Integer.MAX_VALUE, duration);
+            return new SearchResult("no path", start.getNodeCounter(), Integer.MAX_VALUE, duration);
         }
     }
 
